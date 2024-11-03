@@ -17,8 +17,13 @@ jobs:
       - name: NuGetのインストール
         run: nuget restore TDDPractice.sln
 
+      - name: Visual Studioのパスを設定
+        run: |
+          $vsPath = &"${{ env.PROGRAMFILES(X86) }}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+          echo "##vso[task.setvariable variable=MSBUILD_PATH]$vsPath"
+
       - name: ビルド
-        run: msbuild TDDPractice.sln /p:Configuration=Release
+        run: $env:MSBUILD_PATH TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
         run: vstest.console.exe TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
