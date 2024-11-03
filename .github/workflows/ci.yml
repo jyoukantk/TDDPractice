@@ -1,56 +1,16 @@
-name: TDDPractice CI
+name: MSBuild
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+on: push
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: windows-2019
     steps:
-      - name: コードをチェックアウト
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Visual Studioのパスを設定
-        shell: powershell
-        run: |
-          # vswhere.exe のパスが存在するか確認
-          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          if (-not (Test-Path $vswherePath)) { 
-            throw "vswhere.exe not found at expected location: $vswherePath"
-          }
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
 
-          # MSBuildのパスを取得
-          $msbuildPath = & "$vswherePath" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          if (-not $msbuildPath) { 
-            throw "MSBuild path not found. Please check Visual Studio installation or update vswhere query." 
-          }
-          echo "MSBUILD_PATH=$msbuildPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-          
-          # vstest.console.exe のパスを取得
-          $vstestPath = & "$vswherePath" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
-          if (-not $vstestPath) {
-            $vstestPath = & "$vswherePath" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
-          }
-          if (-not $vstestPath) { 
-            throw "vstest.console.exe path not found. Please check Visual Studio installation or update vswhere query."
-          }
-          echo "VSTEST_PATH=$vstestPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-
-      - name: NuGetのインストール
-        run: nuget restore TDDPractice.sln
-
-      - name: ビルド
-        shell: powershell
-        run: |
-          if (-not (Test-Path "${env:MSBUILD_PATH}")) { throw "MSBuild path is invalid or empty: $env:MSBUILD_PATH" }
-          & "${env:MSBUILD_PATH}" TDDPractice.sln /p:Configuration=Release
-
-      - name: テストの実行
-        shell: powershell
-        run: |
-          if (-not (Test-Path "${env:VSTEST_PATH}")) { throw "vstest.console.exe path is invalid or empty: $env:VSTEST_PATH" }
-          & "${env:VSTEST_PATH}" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
+      - run: dotnet build
+      - run: dotnet test
