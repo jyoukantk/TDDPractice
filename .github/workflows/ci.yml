@@ -1,56 +1,33 @@
-name: TDDPractice CI
-
+# GitHub Actionsの名前
+name: Build .NET Framework 4.7.2
+# GitHub Actionsを実行させたい動作
 on:
+  # 今回はpush時に実行させる 
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-
+    # GitHub Actionsを実行させたいブランチを指定する(今回はdevelopを指定)
+    branches: [ master ]
+# 自動化
 jobs:
-  build-and-test:
+  build:
+    # GitHub Actionsで動作させる仮想OS環境(今回はubuntuを指定)
     runs-on: windows-latest
-
+    # 自動化する動作
     steps:
-      - name: コードをチェックアウト
-        uses: actions/checkout@v3
-
-      - name: NuGetのインストール
-        run: nuget restore TDDPractice.sln
-
-      - name: Visual Studioのパスを設定
-        shell: powershell
-        run: |
-          # vswhere.exe のパスが存在するか確認
-          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          if (-not (Test-Path $vswherePath)) { 
-            throw "vswhere.exe not found at expected location: $vswherePath"
-          }
-
-          # MSBuildのパスを取得
-          $vsPath = & "$vswherePath" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          if (-not $vsPath) { 
-            throw "MSBuild path not found. Please check Visual Studio installation or update vswhere query." 
-          }
-          echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-          
-          # vstest.console.exe のパスを取得
-          $vstestPath = & "$vswherePath" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
-          if (-not $vstestPath) {
-            $vstestPath = & "$vswherePath" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
-          }
-          if (-not $vstestPath) { 
-            throw "vstest.console.exe path not found. Please check Visual Studio installation or update vswhere query."
-          }
-          echo "VSTEST_PATH=$vstestPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-
-      - name: ビルド
-        shell: powershell
-        run: |
-          if (-not (Test-Path "$env:MSBUILD_PATH")) { throw "MSBuild path is invalid or empty: $env:MSBUILD_PATH" }
-          & "$env:MSBUILD_PATH" TDDPractice.sln /p:Configuration=Release
-
-      - name: テストの実行
-        shell: powershell
-        run: |
-          if (-not (Test-Path "$env:VSTEST_PATH")) { throw "vstest.console.exe path is invalid or empty: $env:VSTEST_PATH" }
-          & "$env:VSTEST_PATH" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
+      # プロジェクトをチェックアウトする
+      - name: checkout
+        uses: actions/checkout@v2
+     # .Net のRuntimeを仮想OSにインストールする
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          # インストール.netのバージョンを指定(今回は.net6.0を指定) 
+          dotnet-version: 4.7.2
+      # プロジェクトで必要なライブラリなどをインストールする
+      - name: Restore dependencies
+        run: dotnet restore
+      # ビルドを行う(同時にコーティング規約の静的チェックを行う)
+      - name: DotNet Build Restore
+        run: dotnet build --no-restore /warnaserror
+      # ユニットテストを行う
+      - name: DotNet Unit Test
+        run: dotnet test
