@@ -21,4 +21,4 @@ jobs:
         run: msbuild TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
-        run: vstest.console.exe TDDPractice/YourTestProject/bin/Release/YourTestProject.dll /Platform:x64
+        run: vstest.console.exe TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
