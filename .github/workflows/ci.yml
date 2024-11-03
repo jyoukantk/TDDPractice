@@ -18,12 +18,15 @@ jobs:
         run: nuget restore TDDPractice.sln
 
       - name: Visual Studioのパスを設定
+        shell: powershell
         run: |
-          $vsPath = &"${{ env.PROGRAMFILES(X86) }}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          echo "##vso[task.setvariable variable=MSBUILD_PATH]$vsPath"
+          $vsPath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+          echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: ビルド
+        shell: powershell
         run: $env:MSBUILD_PATH TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
+        shell: powershell
         run: vstest.console.exe TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
