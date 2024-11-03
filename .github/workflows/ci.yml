@@ -25,8 +25,10 @@ jobs:
 
       - name: ビルド
         shell: powershell
-        run: & $env:MSBUILD_PATH TDDPractice.sln /p:Configuration=Release
+        run: |
+          Invoke-Expression "$env:MSBUILD_PATH TDDPractice.sln /p:Configuration=Release"
 
       - name: テストの実行
         shell: powershell
-        run: vstest.console.exe TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
+        run: |
+          vstest.console.exe TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
