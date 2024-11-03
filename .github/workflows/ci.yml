@@ -20,11 +20,16 @@ jobs:
       - name: Visual Studioのパスを設定
         shell: powershell
         run: |
+          # MSBuildのパスを取得
           $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
           if (-not $vsPath) { throw "MSBuild path not found." }
           echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
           
-          $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.TestTools.BuildTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
+          # vstest.console.exeのパスを取得
+          $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
+          if (-not $vstestPath) {
+            $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
+          }
           if (-not $vstestPath) { throw "vstest.console.exe path not found." }
           echo "VSTEST_PATH=$vstestPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
