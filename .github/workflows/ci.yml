@@ -1,35 +1,41 @@
 name: Build TDDPractice App
- 
+
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
- 
+
 jobs:
-  build: 
+  build:
     runs-on: windows-latest
- 
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.1
-      with:
-        fetch-depth: 0
- 
+      uses: actions/checkout@v4
+
     - name: setup-msbuild
-      uses: microsoft/setup-msbuild@v2
-      
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Setup NuGet.exe for use with actions
-      uses: NuGet/setup-nuget@v2.0.0
-      
+      uses: NuGet/setup-nuget@v2
+
     - name: Restore NuGet Packages
       run: nuget restore TDDPractice.sln
-      
+
     - name: Build TDDPractice App
-      run: msbuild TDDPractice.sln /p:Configuration=${{ matrix.configuration }}
- 
+      run: msbuild TDDPractice.sln /p:Configuration=Release
+
     - name: Upload GitHub Pages artifact - TDDPractice
-      uses: actions/upload-pages-artifact@v3.0.1
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: TDDPractice_${{ matrix.configuration }}
-        path: TDDPractice\bin\${{ matrix.configuration }}
+        name: TDDPractice_Release
+        path: TDDPractice\bin\Release
