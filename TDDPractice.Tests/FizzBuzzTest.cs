@@ -65,7 +65,12 @@ namespace TDDPractice.Tests
             //}
         }
 
-
+        [TestMethod]
+        public void TestSample()
+        {
+            int i = 1;
+            Assert.AreEqual(1, i);
+        }
 
 
     }
