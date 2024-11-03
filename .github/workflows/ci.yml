@@ -1,33 +1,46 @@
-# GitHub Actionsの名前
-name: Build .NET Framework 4.7.2
-# GitHub Actionsを実行させたい動作
+name: TDDPractice CI
+
 on:
-  # 今回はpush時に実行させる 
   push:
-    # GitHub Actionsを実行させたいブランチを指定する(今回はdevelopを指定)
-    branches: [ master ]
-# 自動化
+    branches: [master]
+  pull_request:
+    branches: [master]
+
 jobs:
   build:
-    # GitHub Actionsで動作させる仮想OS環境(今回はubuntuを指定)
     runs-on: windows-latest
-    # 自動化する動作
+
     steps:
-      # プロジェクトをチェックアウトする
-      - name: checkout
-        uses: actions/checkout@v2
-     # .Net のRuntimeを仮想OSにインストールする
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          # インストール.netのバージョンを指定(今回は.net6.0を指定) 
-          dotnet-version: 4.7.2
-      # プロジェクトで必要なライブラリなどをインストールする
-      - name: Restore dependencies
-        run: dotnet restore
-      # ビルドを行う(同時にコーティング規約の静的チェックを行う)
-      - name: DotNet Build Restore
-        run: dotnet build --no-restore /warnaserror
-      # ユニットテストを行う
-      - name: DotNet Unit Test
-        run: dotnet test
+      - name: コードをチェックアウト
+        uses: actions/checkout@v3
+
+      - name: Visual Studio のパスを設定
+        shell: powershell
+        run: |
+          # vswhere.exe のパスが存在するか確認
+          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswherePath)) { 
+            throw "vswhere.exe not found at expected location: $vswherePath"
+          }
+
+          # MSBuild のパスを取得
+          $msbuildPath = & "$vswherePath" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+          if (-not $msbuildPath) { 
+            throw "MSBuild path not found. Please check Visual Studio installation or update vswhere query." 
+          }
+          echo "MSBUILD_PATH=$msbuildPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: NuGet のインストール
+        run: nuget restore TDDPractice.sln
+
+      - name: ビルド
+        shell: powershell
+        run: |
+          & "${env:MSBUILD_PATH}" TDDPractice.sln /p:Configuration=Release
+
+      - name: テストの実行
+        shell: powershell
+        run: |
+          $vstestPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+          if (-not (Test-Path $vstestPath)) { throw "vstest.console.exe not found at path: $vstestPath" }
+          & "$vstestPath" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
