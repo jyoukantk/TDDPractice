@@ -14,8 +14,11 @@ jobs:
       - name: コードをチェックアウト
         uses: actions/checkout@v3
 
-      - name: .NET Frameworkのビルドとテスト
-        run: |
-          nuget restore TDDPractice.sln
-          msbuild TDDPractice.sln /p:Configuration=Release
-          vstest.console.exe ./path/to/YourTestProject.dll /Platform:x64
+      - name: NuGetのインストール
+        run: nuget restore TDDPractice.sln
+
+      - name: ビルド
+        run: msbuild TDDPractice.sln /p:Configuration=Release
+
+      - name: テストの実行
+        run: vstest.console.exe TDDPractice/YourTestProject/bin/Release/YourTestProject.dll /Platform:x64
