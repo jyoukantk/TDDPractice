@@ -1,4 +1,4 @@
-name: Build Counter App
+name: Build TDDPractice App
  
 on:
   push:
@@ -13,8 +13,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
  
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on: windows-latest
  
     steps:
     - name: Checkout
@@ -26,30 +25,16 @@ jobs:
       uses: microsoft/setup-msbuild@v2
       
     - name: Setup NuGet.exe for use with actions
-      # You may pin to the exact commit or the version.
-      # uses: NuGet/setup-nuget@a21f25cd3998bf370fde17e3f1b4c12c175172f9
       uses: NuGet/setup-nuget@v2.0.0
       
     - name: Restore NuGet Packages
-      run: nuget restore Counter.sln
+      run: nuget restore TDDPractice.sln
       
-    - name: Build Counter App
-      run: msbuild Counter.sln /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+    - name: Build TDDPractice App
+      run: msbuild TDDPractice.sln /p:Configuration=${{ matrix.configuration }}
  
-    - name: Upload GitHub Pages artifact - CounterWPF
+    - name: Upload GitHub Pages artifact - TDDPractice
       uses: actions/upload-pages-artifact@v3.0.1
       with:
-        # Artifact name
-        name: CounterWPF_${{ matrix.configuration }}
-        # Path of the directory containing the static assets.
-        path: CounterWPF\bin\${{ matrix.configuration }}
- 
-    - name: Upload GitHub Pages artifact - CounterForm
-      uses: actions/upload-pages-artifact@v3.0.1
-      with:
-        # Artifact name
-        name: CounterForm_${{ matrix.configuration }}
-        # Path of the directory containing the static assets.
-        path: CounterForm\bin\${{ matrix.configuration }}
+        name: TDDPractice_${{ matrix.configuration }}
+        path: TDDPractice\bin\${{ matrix.configuration }}
