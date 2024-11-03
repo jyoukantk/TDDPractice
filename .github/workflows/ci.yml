@@ -21,12 +21,14 @@ jobs:
         shell: powershell
         run: |
           $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          echo "MSBUILD_PATH=`"$vsPath`"" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+          echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: ビルド
         shell: powershell
+        env:
+          MSBUILD_PATH: ${{ env.MSBUILD_PATH }}
         run: |
-          & "$env:MSBUILD_PATH" TDDPractice.sln /p:Configuration=Release
+          & "${env:MSBUILD_PATH}" TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
         shell: powershell
