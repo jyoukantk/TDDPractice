@@ -21,11 +21,11 @@ jobs:
         shell: powershell
         run: |
           $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          if (-not $vsPath) { throw "MSBuildのパスが見つかりませんでした。" }
+          if (-not $vsPath) { throw "MSBuild path not found." }
           echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
           
           $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.TestTools.BuildTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
-          if (-not $vstestPath) { throw "vstest.console.exeのパスが見つかりませんでした。" }
+          if (-not $vstestPath) { throw "vstest.console.exe path not found." }
           echo "VSTEST_PATH=$vstestPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: ビルド
@@ -33,7 +33,7 @@ jobs:
         env:
           MSBUILD_PATH: ${{ env.MSBUILD_PATH }}
         run: |
-          if (-not (Test-Path "${env:MSBUILD_PATH}")) { throw "MSBuildのパスが無効です: $env:MSBUILD_PATH" }
+          if (-not (Test-Path "${env:MSBUILD_PATH}")) { throw "MSBuild path is invalid: $env:MSBUILD_PATH" }
           & "${env:MSBUILD_PATH}" TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
@@ -41,5 +41,5 @@ jobs:
         env:
           VSTEST_PATH: ${{ env.VSTEST_PATH }}
         run: |
-          if (-not (Test-Path "${env:VSTEST_PATH}")) { throw "vstest.console.exeのパスが無効です: $env:VSTEST_PATH" }
+          if (-not (Test-Path "${env:VSTEST_PATH}")) { throw "vstest.console.exe path is invalid: $env:VSTEST_PATH" }
           & "${env:VSTEST_PATH}" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
