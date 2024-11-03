@@ -7,12 +7,7 @@ on:
     branches: [ "master" ]
  
 jobs:
-  build:
- 
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
- 
+  build: 
     runs-on: windows-latest
  
     steps:
