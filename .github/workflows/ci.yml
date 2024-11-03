@@ -32,6 +32,9 @@ jobs:
           
           # vstest.console.exe のパスを取得
           $vstestPath = & "$vswherePath" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
+          if (-not $vstestPath) {
+            $vstestPath = & "$vswherePath" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
+          }
           if (-not $vstestPath) { 
             throw "vstest.console.exe path not found. Please check Visual Studio installation or update vswhere query."
           }
