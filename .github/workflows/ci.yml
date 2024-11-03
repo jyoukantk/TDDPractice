@@ -20,31 +20,37 @@ jobs:
       - name: Visual Studioのパスを設定
         shell: powershell
         run: |
+          # vswhere.exe のパスが存在するか確認
+          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswherePath)) { 
+            throw "vswhere.exe not found at expected location: $vswherePath"
+          }
+
           # MSBuildのパスを取得
-          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-          if (-not $vsPath) { throw "MSBuild path not found." }
+          $vsPath = & "$vswherePath" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+          if (-not $vsPath) { 
+            throw "MSBuild path not found. Please check Visual Studio installation or update vswhere query." 
+          }
           echo "MSBUILD_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
           
-          # vstest.console.exeのパスを取得
-          $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
+          # vstest.console.exe のパスを取得
+          $vstestPath = & "$vswherePath" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe
           if (-not $vstestPath) {
-            $vstestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
+            $vstestPath = & "$vswherePath" -latest -products * -find Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe
           }
-          if (-not $vstestPath) { throw "vstest.console.exe path not found." }
+          if (-not $vstestPath) { 
+            throw "vstest.console.exe path not found. Please check Visual Studio installation or update vswhere query."
+          }
           echo "VSTEST_PATH=$vstestPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: ビルド
         shell: powershell
-        env:
-          MSBUILD_PATH: ${{ env.MSBUILD_PATH }}
         run: |
-          if (-not (Test-Path "${env:MSBUILD_PATH}")) { throw "MSBuild path is invalid: $env:MSBUILD_PATH" }
-          & "${env:MSBUILD_PATH}" TDDPractice.sln /p:Configuration=Release
+          if (-not (Test-Path "$env:MSBUILD_PATH")) { throw "MSBuild path is invalid or empty: $env:MSBUILD_PATH" }
+          & "$env:MSBUILD_PATH" TDDPractice.sln /p:Configuration=Release
 
       - name: テストの実行
         shell: powershell
-        env:
-          VSTEST_PATH: ${{ env.VSTEST_PATH }}
         run: |
-          if (-not (Test-Path "${env:VSTEST_PATH}")) { throw "vstest.console.exe path is invalid: $env:VSTEST_PATH" }
-          & "${env:VSTEST_PATH}" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
+          if (-not (Test-Path "$env:VSTEST_PATH")) { throw "vstest.console.exe path is invalid or empty: $env:VSTEST_PATH" }
+          & "$env:VSTEST_PATH" TDDPractice/TDDPractice.Tests/bin/Release/TDDPractice.Tests.dll /Platform:x64
